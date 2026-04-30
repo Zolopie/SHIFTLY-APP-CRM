@@ -15,7 +15,6 @@ import {
 const mainNav = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Staff', url: '/staff', icon: Users },
-  { title: 'Guard Mobile', url: '/guard', icon: Clock },
   { title: 'Rostering', url: '/rostering', icon: Calendar },
   { title: 'Attendance', url: '/attendance', icon: Clock },
   { title: 'Clients & Sites', url: '/clients', icon: Building2 },

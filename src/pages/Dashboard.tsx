@@ -83,8 +83,8 @@ export default function Dashboard() {
             <div className="flex items-center gap-4">
               <BrandLogo />
               <div>
-                <p className="text-sm uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Shiftly CRM</p>
-                <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">Modern workforce and CRM insights</h1>
+                <p className="text-sm uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Shiftly</p>
+                <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">Advanced Rostering and Payroll System</h1>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">

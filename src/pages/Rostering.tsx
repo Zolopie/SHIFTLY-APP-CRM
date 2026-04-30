@@ -304,7 +304,7 @@ export default function Rostering() {
             </DialogContent>
           </Dialog>
           <Button variant="outline" onClick={handleGenerateRandomShifts}>
-            Generate Random Shifts
+            Copy Shifts
           </Button>
         </div>
       </div>
