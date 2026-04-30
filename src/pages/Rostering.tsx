@@ -44,6 +44,9 @@ export default function Rostering() {
   const [newShift, setNewShift] = useState({ staff_id: '', site_id: '', date: '', start_time: '07:00', end_time: '15:00', notes: '' });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editShift, setEditShift] = useState<EditShift | null>(null);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  const [copyStaffId, setCopyStaffId] = useState('');
+  const [copyWeeks, setCopyWeeks] = useState(1);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -114,6 +117,57 @@ export default function Rostering() {
     }
 
     toast({ title: 'Random shifts generated' });
+    fetchData();
+  };
+
+  const handleCopyShifts = async () => {
+    if (!copyStaffId) {
+      toast({ title: 'Select staff', description: 'Choose a staff member to copy shifts for.', variant: 'destructive' });
+      return;
+    }
+
+    const currentWeekDates = weekDates.map(formatDate);
+    const staffShifts = shifts.filter((shift) => shift.staff_id === copyStaffId && currentWeekDates.includes(shift.date));
+
+    if (!staffShifts.length) {
+      toast({ title: 'No shifts found', description: 'This staff member has no shifts in the current week.', variant: 'destructive' });
+      return;
+    }
+
+    const copies = [];
+    for (let weekIndex = 1; weekIndex <= copyWeeks; weekIndex += 1) {
+      staffShifts.forEach((shift) => {
+        const sourceDate = new Date(shift.date);
+        const targetDate = new Date(sourceDate);
+        targetDate.setDate(sourceDate.getDate() + weekIndex * 7);
+        copies.push({
+          staff_id: shift.staff_id,
+          site_name: shift.site_name,
+          date: formatDate(targetDate),
+          start_time: shift.start_time,
+          end_time: shift.end_time,
+          notes: shift.notes,
+          status: shift.status,
+          user_id: user?.id,
+        });
+      });
+    }
+
+    if (!copies.length) {
+      toast({ title: 'Nothing to copy', description: 'No shifts copied for the requested range.', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('shifts').insert(copies);
+    if (error) {
+      toast({ title: 'Error copying shifts', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Shifts copied', description: `Copied shifts for ${copyWeeks} week(s) ahead.`, variant: 'success' });
+    setCopyDialogOpen(false);
+    setCopyStaffId('');
+    setCopyWeeks(1);
     fetchData();
   };
 
@@ -303,9 +357,40 @@ export default function Rostering() {
               )}
             </DialogContent>
           </Dialog>
-          <Button variant="outline" onClick={handleGenerateRandomShifts}>
-            Copy Shifts
-          </Button>
+          <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Copy Shifts</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Copy Weekly Shifts</DialogTitle></DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>Staff Member</Label>
+                  <Select value={copyStaffId} onValueChange={(v) => setCopyStaffId(v)}>
+                    <SelectTrigger><SelectValue placeholder="Select staff with shifts" /></SelectTrigger>
+                    <SelectContent>
+                      {staffOptions
+                        .filter((s) => shifts.some((shift) => shift.staff_id === s.id && weekDates.map(formatDate).includes(shift.date)))
+                        .map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Copy over weeks</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={4}
+                    value={copyWeeks}
+                    onChange={(e) => setCopyWeeks(Number(e.target.value) || 1)}
+                  />
+                </div>
+                <Button onClick={handleCopyShifts} className="w-full">Copy to future weeks</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

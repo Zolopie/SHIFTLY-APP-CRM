@@ -1,40 +1,41 @@
-import { useEffect, useState } from 'react';
-import { BrandLogo } from '@/components/BrandLogo';
+import { useEffect, useState } from "react";
+import logo from "@/assets/logo.png";
 
-interface SplashScreenProps {
-  onFinish?: () => void;
-}
-
-export default function SplashScreen({ onFinish }: SplashScreenProps) {
-  const [progress, setProgress] = useState(0);
+export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const startTimer = setTimeout(() => setProgress(100), 50);
-    const finishTimer = setTimeout(() => onFinish?.(), 1300);
-    return () => {
-      clearTimeout(startTimer);
-      clearTimeout(finishTimer);
-    };
+    const timer = setTimeout(() => {
+      setFadeOut(true);
+      setTimeout(onFinish, 400);
+    }, 1200);
+
+    return () => clearTimeout(timer);
   }, [onFinish]);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#020617] text-white">
-      <div className="mx-4 w-full max-w-lg rounded-[2rem] border border-white/10 bg-[#0B1220]/95 p-8 shadow-[0_30px_90px_rgba(0,0,0,0.4)] backdrop-blur-xl">
-        <div className="flex flex-col items-center gap-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 ring-1 ring-white/10">
-            <BrandLogo showText={false} className="h-8 w-auto text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white">Shiftly</h1>
-            <p className="mt-2 text-sm text-slate-400">Loading your workforce command center…</p>
-          </div>
-          <div className="w-full overflow-hidden rounded-full border border-white/10 bg-white/5">
-            <div
-              className="h-2 rounded-full bg-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.25)] transition-[width] duration-1000 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-[#020617] transition-opacity duration-500 ${
+        fadeOut ? "opacity-0" : "opacity-100"
+      }`}
+    >
+      <div className="text-center space-y-6">
+
+        {/* 👇 THIS IS STEP 4 */}
+        <img
+          src={logo}
+          alt="Shiftly"
+          className="h-32 mx-auto animate-fade-in drop-shadow-[0_0_25px_rgba(245,158,11,0.35)]"
+        />
+
+        <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden mx-auto">
+          <div className="h-full bg-amber-400 animate-loading-bar" />
         </div>
+
+        <p className="text-slate-400 text-sm">
+          Loading Shiftly...
+        </p>
+
       </div>
     </div>
   );

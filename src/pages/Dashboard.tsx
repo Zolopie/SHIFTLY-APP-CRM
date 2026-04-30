@@ -6,6 +6,8 @@ import { Users, Calendar, Clock, DollarSign, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import ProfileMenu from "@/components/ProfileMenu";
 import { BrandLogo } from '@/components/BrandLogo';
+import DashboardSkeleton from "@/components/DashboardSkeleton";
+
 const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(280, 65%, 60%)', 'hsl(0, 72%, 51%)'];
 
 export default function Dashboard() {
@@ -16,6 +18,7 @@ export default function Dashboard() {
   const [payRuns, setPayRuns] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
