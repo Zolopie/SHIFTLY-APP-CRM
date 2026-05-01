@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Edit, Check, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 interface Shift {
   id: string;
@@ -20,6 +22,17 @@ interface Shift {
   end_time: string;
   status: string;
   notes: string | null;
+}
+
+interface LeaveRequest {
+  id: string;
+  staff_id: string;
+  request_type: 'leave' | 'unavailability';
+  start_date: string;
+  end_date: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'denied';
+  staff?: { full_name: string };
 }
 
 interface StaffOption {
@@ -36,6 +49,7 @@ const possibleStartTimes = ['06:00', '07:00', '08:00', '09:00', '14:00'];
 
 export default function Rostering() {
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
   const [siteOptions, setSiteOptions] = useState<SiteOption[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -47,18 +61,55 @@ export default function Rostering() {
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copyStaffId, setCopyStaffId] = useState('');
   const [copyWeeks, setCopyWeeks] = useState(1);
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const updateLeaveRequestStatus = async (id: string, status: 'approved' | 'denied') => {
+    const request = leaveRequests.find(r => r.id === id);
+    if (!request) return;
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .update({
+        status,
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Success', description: `Request ${status}` });
+      if (status === 'approved') {
+        // Auto remove shifts during leave period
+        const { error: shiftError } = await supabase
+          .from('shifts')
+          .delete()
+          .eq('staff_id', request.staff_id)
+          .gte('date', request.start_date)
+          .lte('date', request.end_date);
+        if (shiftError) {
+          toast({ title: 'Warning', description: 'Leave approved but failed to remove shifts automatically', variant: 'destructive' });
+        } else {
+          toast({ title: 'Auto-scheduled', description: 'Shifts during leave period have been removed' });
+        }
+      }
+      fetchData();
+    }
+  };
 
   const fetchData = async () => {
-    const [shiftsRes, staffRes, sitesRes] = await Promise.all([
+    const [shiftsRes, staffRes, sitesRes, leaveRes] = await Promise.all([
       supabase.from('shifts').select('*').order('date'),
       supabase.from('staff').select('id, full_name').eq('status', 'active'),
       supabase.from('clients').select('id, company_name, contact_name'),
+      supabase.from('leave_requests').select(`
+        *,
+        staff:staff_id (full_name)
+      `).eq('status', 'approved'),
     ]);
     if (shiftsRes.data) setShifts(shiftsRes.data);
     if (staffRes.data) setStaffOptions(staffRes.data);
     if (sitesRes.data) setSiteOptions(sitesRes.data);
+    if (leaveRes.data) setLeaveRequests(leaveRes.data);
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -248,14 +299,22 @@ export default function Rostering() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Rostering</h1>
-          <p className="text-muted-foreground">Manage shift schedules</p>
+          <p className="text-muted-foreground">Manage shift schedules and leave requests</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevWeek}><ChevronLeft className="h-4 w-4" /></Button>
-          <span className="text-sm font-medium min-w-[200px] text-center">
-            {weekDates[0].toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })} – {weekDates[6].toLocaleDateString('en-AU', { month: 'long', day: 'numeric', year: 'numeric' })}
-          </span>
-          <Button variant="outline" size="icon" onClick={nextWeek}><ChevronRight className="h-4 w-4" /></Button>
+      </div>
+      <Tabs defaultValue="shifts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="shifts">Shifts</TabsTrigger>
+          <TabsTrigger value="leave">Leave Requests</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="shifts" className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={prevWeek}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="text-sm font-medium min-w-[200px] text-center">
+              {weekDates[0].toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })} – {weekDates[6].toLocaleDateString('en-AU', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+            <Button variant="outline" size="icon" onClick={nextWeek}><ChevronRight className="h-4 w-4" /></Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" /> Add Shift</Button>
@@ -437,6 +496,48 @@ export default function Rostering() {
           );
         })}
       </div>
+        </TabsContent>
+
+        <TabsContent value="leave" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Leave Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {leaveRequests.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between p-4 border rounded">
+                    <div>
+                      <div className="font-medium">{request.staff?.full_name}</div>
+                      <div className="text-sm text-muted-foreground capitalize">{request.request_type}</div>
+                      <div className="text-sm">{request.start_date} to {request.end_date}</div>
+                      {request.reason && <div className="text-sm italic">{request.reason}</div>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={request.status === 'approved' ? 'default' : request.status === 'denied' ? 'destructive' : 'secondary'}>
+                        {request.status}
+                      </Badge>
+                      {request.status === 'pending' && (
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => updateLeaveRequestStatus(request.id, 'approved')}>
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => updateLeaveRequestStatus(request.id, 'denied')}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {leaveRequests.length === 0 && (
+                  <p className="text-center text-muted-foreground">No leave requests</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

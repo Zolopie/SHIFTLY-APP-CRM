@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Calendar, Clock, Building2, DollarSign,
-  FileText, Settings, LogOut,
+  FileText, Settings, LogOut, UserCheck,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +18,7 @@ const mainNav = [
   { title: 'Rostering', url: '/rostering', icon: Calendar },
   { title: 'Attendance', url: '/attendance', icon: Clock },
   { title: 'Clients & Sites', url: '/clients', icon: Building2 },
+   { title: 'Leave Requests', url: '/leave-requests', icon: UserCheck },
 ];
 
 const financeNav = [

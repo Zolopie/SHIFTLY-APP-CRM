@@ -17,6 +17,7 @@ import Invoices from '@/pages/Invoices';
 import Reports from "@/pages/Reports";
 import GuardDashboard from "@/pages/GuardDashboard";
 import SettingsPage from "@/pages/SettingsPage";
+import LeaveRequests from "@/pages/LeaveRequests";
 import NotFound from "@/pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import { useState } from "react";
@@ -69,6 +70,7 @@ const App = () => {
                 <Route path="/attendance" element={<Attendance />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/payroll" element={<Payroll />} />
+                <Route path="/leave-requests" element={<LeaveRequests />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/guard" element={<GuardDashboard />} />
