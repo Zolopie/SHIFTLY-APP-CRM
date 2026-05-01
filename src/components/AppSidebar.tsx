@@ -27,7 +27,7 @@ const financeNav = [
 ];
 
 export function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const { signOut } = useAuth();
@@ -35,21 +35,42 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="p-4">
+    <Sidebar
+      collapsible="icon"
+      className="bg-white text-slate-800 border-r border-slate-200 [&>[data-sidebar=sidebar]]:bg-white"
+    >
+      {/* HEADER */}
+      <SidebarHeader className="p-4 border-b border-slate-200 bg-white">
         <div className="flex items-center gap-2">
           <BrandLogo showText={!collapsed} />
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      {/* CONTENT */}
+      <SidebarContent className="bg-white">
+
+        {/* MAIN */}
         <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs text-slate-500 uppercase tracking-wider px-2">
+            Main
+          </SidebarGroupLabel>
+
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    className="
+                      transition-all duration-200
+                      text-slate-700
+                      hover:bg-blue-50 hover:text-blue-600
+                      data-[active=true]:bg-blue-100
+                      data-[active=true]:text-blue-600
+                      data-[active=true]:font-medium
+                    "
+                  >
                     <NavLink to={item.url} end={item.url === '/dashboard'}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -61,13 +82,28 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* FINANCE */}
         <SidebarGroup>
-          <SidebarGroupLabel>Finance</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs text-slate-500 uppercase tracking-wider px-2">
+            Finance
+          </SidebarGroupLabel>
+
           <SidebarGroupContent>
             <SidebarMenu>
               {financeNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    className="
+                      transition-all duration-200
+                      text-slate-700
+                      hover:bg-blue-50 hover:text-blue-600
+                      data-[active=true]:bg-blue-100
+                      data-[active=true]:text-blue-600
+                      data-[active=true]:font-medium
+                    "
+                  >
                     <NavLink to={item.url}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -78,24 +114,35 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
       </SidebarContent>
 
-      <SidebarFooter>
+      {/* FOOTER */}
+      <SidebarFooter className="border-t border-slate-200 bg-white">
         <SidebarMenu>
+
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton
+              asChild
+              className="text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
               <NavLink to="/settings">
                 <Settings className="h-4 w-4" />
                 {!collapsed && <span>Settings</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => signOut()}>
+            <SidebarMenuButton
+              onClick={() => signOut()}
+              className="text-slate-700 hover:bg-red-50 hover:text-red-500 transition-all"
+            >
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>Sign Out</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

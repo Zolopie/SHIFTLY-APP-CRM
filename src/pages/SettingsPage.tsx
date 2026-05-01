@@ -58,34 +58,9 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Building className="h-5 w-5" />Company Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2"><Label>Company Name</Label><Input value={companyName} onChange={e => setCompanyName(e.target.value)} /></div>
-            <div className="space-y-2"><Label>ABN</Label><Input value={abn} onChange={e => setAbn(e.target.value)} placeholder="XX XXX XXX XXX" /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2"><Label>Company Email</Label><Input value={companyEmail} onChange={e => setCompanyEmail(e.target.value)} type="email" /></div>
-            <div className="space-y-2"><Label>Company Phone</Label><Input value={companyPhone} onChange={e => setCompanyPhone(e.target.value)} /></div>
-          </div>
-          <Button onClick={() => toast({ title: 'Company details saved' })}>Save Changes</Button>
-        </CardContent>
-      </Card>
+      
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" />Payroll Configuration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="flex justify-between p-3 rounded-lg bg-muted/50"><span className="text-muted-foreground">Tax Rate (PAYG)</span><span className="font-medium">32.5%</span></div>
-          <div className="flex justify-between p-3 rounded-lg bg-muted/50"><span className="text-muted-foreground">Superannuation Rate</span><span className="font-medium">11.5%</span></div>
-          <div className="flex justify-between p-3 rounded-lg bg-muted/50"><span className="text-muted-foreground">Overtime Multiplier</span><span className="font-medium">1.5x after 38hrs/week</span></div>
-          <div className="flex justify-between p-3 rounded-lg bg-muted/50"><span className="text-muted-foreground">GST Rate</span><span className="font-medium">10%</span></div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 }

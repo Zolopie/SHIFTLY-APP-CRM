@@ -4,23 +4,11 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileMenu from '@/components/ProfileMenu';
 import { BrandLogo } from '@/components/BrandLogo';
-import { Bell, Moon, Sun } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
 
 export function AppLayout() {
   const { user } = useAuth();
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark';
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
-  }, [dark]);
 
   return (
     <SidebarProvider>
@@ -33,9 +21,6 @@ export function AppLayout() {
               <BrandLogo className="text-slate-900 dark:text-slate-50" />
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setDark(!dark)}>
-                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
               <Button variant="ghost" size="icon">
                 <Bell className="h-4 w-4" />
               </Button>

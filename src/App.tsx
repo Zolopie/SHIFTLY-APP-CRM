@@ -21,6 +21,7 @@ import NotFound from "@/pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import { useState } from "react";
 
+
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
