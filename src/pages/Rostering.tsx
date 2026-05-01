@@ -40,6 +40,12 @@ interface StaffOption {
   full_name: string;
 }
 
+interface SiteOption {
+  id: string;
+  company_name: string;
+  contact_name: string | null;
+}
+
 interface EditShift extends Shift {
   site_id: string;
 }
@@ -48,6 +54,10 @@ const possibleShiftNotes = ['Routine patrol', 'VIP site check', 'Supply delivery
 const possibleStartTimes = ['06:00', '07:00', '08:00', '09:00', '14:00'];
 
 export default function Rostering() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const userId = user?.id ?? '';
+
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
@@ -66,10 +76,10 @@ export default function Rostering() {
     if (!request) return;
 
     const { error } = await supabase
-      .from('leave_requests')
+      .from<any, any>('leave_requests')
       .update({
         status,
-        approved_by: user?.id,
+        approved_by: user?.id ?? null,
         approved_at: new Date().toISOString(),
       })
       .eq('id', id);
@@ -101,15 +111,24 @@ export default function Rostering() {
       supabase.from('shifts').select('*').order('date'),
       supabase.from('staff').select('id, full_name').eq('status', 'active'),
       supabase.from('clients').select('id, company_name, contact_name'),
-      supabase.from('leave_requests').select(`
-        *,
-        staff:staff_id (full_name)
-      `).eq('status', 'approved'),
+      supabase.from<any, any>('leave_requests').select('*').eq('status', 'approved'),
     ]);
     if (shiftsRes.data) setShifts(shiftsRes.data);
     if (staffRes.data) setStaffOptions(staffRes.data);
     if (sitesRes.data) setSiteOptions(sitesRes.data);
-    if (leaveRes.data) setLeaveRequests(leaveRes.data);
+    if (leaveRes.data) {
+      const staffMap = (staffRes.data ?? []).reduce<Record<string, string>>((map, staff) => {
+        map[staff.id] = staff.full_name;
+        return map;
+      }, {});
+      setLeaveRequests(
+        leaveRes.data.map((request: any) => ({
+          ...request,
+          reason: request.reason ?? '',
+          staff: request.staff_id ? { full_name: staffMap[request.staff_id] ?? 'Unknown' } : undefined,
+        })) as LeaveRequest[],
+      );
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -157,7 +176,7 @@ export default function Rostering() {
         end_time: end,
         notes: getRandomItem(possibleShiftNotes),
         status: 'scheduled',
-        user_id: user?.id,
+        user_id: userId,
       };
     });
 
@@ -199,7 +218,7 @@ export default function Rostering() {
           end_time: shift.end_time,
           notes: shift.notes,
           status: shift.status,
-          user_id: user?.id,
+          user_id: userId,
         });
       });
     }
@@ -215,7 +234,7 @@ export default function Rostering() {
       return;
     }
 
-    toast({ title: 'Shifts copied', description: `Copied shifts for ${copyWeeks} week(s) ahead.`, variant: 'success' });
+    toast({ title: 'Shifts copied', description: `Copied shifts for ${copyWeeks} week(s) ahead.`, variant: 'default' });
     setCopyDialogOpen(false);
     setCopyStaffId('');
     setCopyWeeks(1);
@@ -239,7 +258,7 @@ export default function Rostering() {
       start_time: newShift.start_time,
       end_time: newShift.end_time,
       notes: newShift.notes,
-      user_id: user?.id,
+      user_id: userId,
       status: 'scheduled',
     });
     if (error) {
@@ -291,6 +310,11 @@ export default function Rostering() {
 
   const prevWeek = () => { const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d); };
   const nextWeek = () => { const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d); };
+
+  const possibleShiftSites = useMemo(
+    () => (siteOptions.length ? siteOptions.map((site) => site.company_name) : ['Main site', 'Secondary site', 'Supply hub']),
+    [siteOptions],
+  );
 
   const getShiftsForDate = (date: string) => shifts.filter((s) => s.date === date);
 
@@ -451,7 +475,6 @@ export default function Rostering() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
 
       <div className="grid grid-cols-7 gap-2">
         {weekDates.map((date) => {
