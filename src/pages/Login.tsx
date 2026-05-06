@@ -74,6 +74,12 @@ export default function Login() {
             {isSignUp
               ? 'Set up your workforce management account'
               : 'Sign in to your Shiftly dashboard'}
+
+          </CardDescription>
+          <CardDescription>
+            {isSignUp
+              ? 'Set up your workforce management account'
+              : ' email: admin123@test.com password: testaccount?'}
           </CardDescription>
         </CardHeader>
 
